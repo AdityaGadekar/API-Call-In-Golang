@@ -48,7 +48,9 @@ func main() {
 
 	e.DELETE("/employee/:id", deleteEmployee)
 
-	e.PATCH("/employee", updateEmployee)
+	// e.PATCH("/employee", updateEmployee)
+	e.PUT("/employee/:id", updateEmployee)
+
 
 	// Start server
 	e.Logger.Fatal(e.Start(":1323"))
@@ -131,8 +133,6 @@ func saveEmployee(c echo.Context) error {
 func deleteEmployee(c echo.Context) error {
 	id := c.Param("id")
 
-	// c.Logger().Println("id ------> ", id)
-
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ResponseWithMessage{"Cannot convert " + id + " to integer."})
@@ -149,26 +149,24 @@ func deleteEmployee(c echo.Context) error {
 func updateEmployee(c echo.Context) error{
 
 	// reading path	
-	id:=c.QueryParam("id")
-	Name:=c.QueryParam("Name")
-	Age:=c.QueryParam("Age")
-
-	age,_ := strconv.Atoi(Age)
-
+	id:=c.Param("id")
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ResponseWithMessage{"Cannot convert " + id + " to integer."})
 	}
+	emp := new(Employee)
+
+	if err := c.Bind(emp); err != nil {
+		return c.JSON(http.StatusBadRequest, ResponseWithMessage{"Error parsing the request body."})
+	}
 
 	for _, v := range EMP_DB {
 		if v.Id == idInt{
-			v.Name=Name
-			v.Age= age
-		    EMP_DB[v.Id] = v
+		    EMP_DB[v.Id] = *emp
 		}
 	}
-	
 	
 	return c.JSON(http.StatusOK, EMP_DB[idInt])
 	
 }
+
